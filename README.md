@@ -14,13 +14,10 @@ services:
   dashboard:
     image: ghcr.io/fdcastel/syncthing-dashboard:latest
     restart: unless-stopped
-    ports:
-      - "8080:8080"
+    network_mode: host
     environment:
       SYNCTHING_BASE_URL: http://host.docker.internal:8384
       SYNCTHING_API_KEY: ${SYNCTHING_API_KEY}
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
 ```
 
 ## Main configuration
