@@ -1,0 +1,4 @@
+secrets/syncthing_api_key.txt
+*.exe
+*.test
+coverage.out

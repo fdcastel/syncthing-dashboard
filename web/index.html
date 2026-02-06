@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Syncthing Read-Only View</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <h1 id="page-title">Syncthing</h1>
+        <p id="page-subtitle">Read-Only Dashboard</p>
+      </div>
+      <div class="top-meta">
+        <p id="generated-at">Waiting for first snapshot...</p>
+        <span id="global-status" class="status-pill status-warn">Loading</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="dashboard-layout">
+    <section class="section-group folders-group" aria-labelledby="folders-title">
+      <div class="section-header">
+        <h2 id="folders-title" class="section-title">Folders (<span id="folders-count">0</span>)</h2>
+        <span id="folders-summary" class="summary-text"></span>
+      </div>
+      <div id="folders-list" class="folders-list"></div>
+    </section>
+
+    <aside class="side-column">
+      <section class="section-group device-group" aria-labelledby="device-title">
+        <div class="section-header">
+          <h2 id="device-title" class="section-title">This Device</h2>
+        </div>
+        <ul id="device-list" class="meta-list"></ul>
+      </section>
+
+      <section class="section-group remotes-group" aria-labelledby="remotes-title">
+        <div class="section-header">
+          <h2 id="remotes-title" class="section-title">Remote Devices (<span id="remotes-count">0</span>)</h2>
+          <span id="remotes-summary" class="summary-text"></span>
+        </div>
+        <div id="remotes-list" class="remotes-list"></div>
+      </section>
+    </aside>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>
