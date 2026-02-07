@@ -280,7 +280,9 @@ function renderRemotes(data) {
 }
 
 function render(data) {
-  pageTitle.textContent = data.page_title || "Syncthing";
+  const effectiveTitle = data.page_title || "Syncthing";
+  pageTitle.textContent = effectiveTitle;
+  document.title = effectiveTitle;
   pageSubtitle.textContent = data.page_subtitle || "Read-Only Dashboard";
   const serverPoll = Number(data.poll_interval_ms || 0);
   if (Number.isFinite(serverPoll) && serverPoll > 0 && serverPoll !== refreshMs) {
