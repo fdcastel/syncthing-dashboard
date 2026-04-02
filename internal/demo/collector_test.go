@@ -1,18 +1,13 @@
 package demo
 
 import (
-	"context"
 	"testing"
 	"time"
 )
 
 func TestDemoCollectorProducesRichSnapshot(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	c := NewCollector(5 * time.Millisecond)
-	c.Start(ctx)
-	time.Sleep(20 * time.Millisecond)
+	c := NewCollector(5 * time.Second)
+	c.refresh()
 
 	snapshot, ok := c.Snapshot()
 	if !ok {
@@ -74,18 +69,14 @@ func TestDemoCollectorProducesRichSnapshot(t *testing.T) {
 }
 
 func TestDemoCollectorProgressMoves(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	c := NewCollector(5 * time.Millisecond)
-	c.Start(ctx)
-	time.Sleep(10 * time.Millisecond)
+	c := NewCollector(5 * time.Second)
+	c.refresh()
 	first, ok := c.Snapshot()
 	if !ok {
 		t.Fatalf("expected first snapshot")
 	}
 
-	time.Sleep(20 * time.Millisecond)
+	c.refresh()
 	second, ok := c.Snapshot()
 	if !ok {
 		t.Fatalf("expected second snapshot")
