@@ -4,20 +4,48 @@ A small read-only dashboard for Syncthing status.
 
 ![Syncthing Dashboard UI example](syncthing-dashboard-ui.png)
 
+## Demo mode
+
+When `SYNCTHING_BASE_URL` is not set, the dashboard starts in **demo mode** automatically — no Syncthing instance required. It shows a rich synthetic snapshot with multiple folders and remote devices in various states. This is useful for trying out the UI or developing the frontend.
+
 ## Quick start
 
-
-Example with Docker Compose:
+Example with Docker Compose using a plain API key:
 
 ```yaml
 services:
   dashboard:
     image: ghcr.io/fdcastel/syncthing-dashboard:latest
     restart: unless-stopped
-    network_mode: host
+    ports:
+      - "8080:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       SYNCTHING_BASE_URL: http://host.docker.internal:8384
       SYNCTHING_API_KEY: ${SYNCTHING_API_KEY}
+```
+
+Using a Docker secret or mounted file instead of an environment variable:
+
+```yaml
+services:
+  dashboard:
+    image: ghcr.io/fdcastel/syncthing-dashboard:latest
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      SYNCTHING_BASE_URL: http://host.docker.internal:8384
+      SYNCTHING_API_KEY_FILE: /run/secrets/syncthing_api_key
+    secrets:
+      - syncthing_api_key
+
+secrets:
+  syncthing_api_key:
+    file: ./secrets/syncthing_api_key
 ```
 
 ## Main configuration
@@ -25,6 +53,7 @@ services:
 - `SYNCTHING_BASE_URL`: Syncthing base URL from dashboard backend perspective.
   - If omitted, demonstration mode is enabled automatically.
 - `SYNCTHING_API_KEY` or `SYNCTHING_API_KEY_FILE`: Syncthing API key.
+  - `SYNCTHING_API_KEY_FILE`: path to a file containing the API key (useful with Docker secrets).
 
 ## Additional options
 
