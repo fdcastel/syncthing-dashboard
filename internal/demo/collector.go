@@ -2,8 +2,6 @@ package demo
 
 import (
 	"context"
-	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -103,7 +101,7 @@ func buildSnapshot(now time.Time, tick int, startAt time.Time, pollInterval time
 	folders := buildFolders(now, tick)
 	remotes := buildRemotes(now, tick)
 	device := buildDevice(now, tick, startAt, pollInterval, folders)
-	alerts := buildAlerts(remotes, folders)
+	alerts := model.DeriveAlerts(remotes, folders)
 
 	return model.DashboardSnapshot{
 		GeneratedAt:  now,
@@ -284,45 +282,6 @@ func buildRemotes(now time.Time, tick int) []model.RemoteDeviceStatus {
 	}
 
 	return remotes
-}
-
-func buildAlerts(remotes []model.RemoteDeviceStatus, folders []model.FolderStatus) []model.Alert {
-	alerts := make([]model.Alert, 0)
-
-	for _, remote := range remotes {
-		if remote.Connected {
-			continue
-		}
-		alerts = append(alerts, model.Alert{
-			Severity:  "critical",
-			Code:      "REMOTE_DISCONNECTED",
-			Message:   fmt.Sprintf("Remote device %s is disconnected", remote.Name),
-			SubjectID: remote.ID,
-		})
-	}
-
-	for _, folder := range folders {
-		if strings.EqualFold(folder.State, "error") {
-			alerts = append(alerts, model.Alert{
-				Severity:  "critical",
-				Code:      "FOLDER_ERROR",
-				Message:   fmt.Sprintf("Folder %s reports error state", folder.Label),
-				SubjectID: folder.ID,
-			})
-			continue
-		}
-
-		if folder.NeedItems > 0 || folder.NeedBytes > 0 {
-			alerts = append(alerts, model.Alert{
-				Severity:  "warn",
-				Code:      "FOLDER_OUT_OF_SYNC",
-				Message:   fmt.Sprintf("Folder %s has pending sync items", folder.Label),
-				SubjectID: folder.ID,
-			})
-		}
-	}
-
-	return alerts
 }
 
 func maxInt64(a, b int64) int64 {

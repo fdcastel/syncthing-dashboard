@@ -293,7 +293,7 @@ func (c *Collector) collect(ctx context.Context, now time.Time) (model.Dashboard
 	device.DiscoveryOK = discoveryOK
 	device.DiscoveryTotal = discoveryTotal
 
-	alerts := deriveAlerts(remotes, folders)
+	alerts := model.DeriveAlerts(remotes, folders)
 
 	return model.DashboardSnapshot{
 		GeneratedAt:  now,
@@ -367,45 +367,6 @@ func discoveryHealthCount(status syncthing.SystemStatusResponse) (int, int) {
 		errorCount = status.DiscoveryMethods
 	}
 	return status.DiscoveryMethods - errorCount, status.DiscoveryMethods
-}
-
-func deriveAlerts(remotes []model.RemoteDeviceStatus, folders []model.FolderStatus) []model.Alert {
-	alerts := make([]model.Alert, 0)
-
-	for _, remote := range remotes {
-		if remote.Connected {
-			continue
-		}
-		alerts = append(alerts, model.Alert{
-			Severity:  "critical",
-			Code:      "REMOTE_DISCONNECTED",
-			Message:   fmt.Sprintf("Remote device %s is disconnected", remote.Name),
-			SubjectID: remote.ID,
-		})
-	}
-
-	for _, folder := range folders {
-		if folder.State == "error" {
-			alerts = append(alerts, model.Alert{
-				Severity:  "critical",
-				Code:      "FOLDER_ERROR",
-				Message:   fmt.Sprintf("Folder %s reports error state", folder.Label),
-				SubjectID: folder.ID,
-			})
-			continue
-		}
-
-		if folder.NeedItems > 0 || folder.NeedBytes > 0 {
-			alerts = append(alerts, model.Alert{
-				Severity:  "warn",
-				Code:      "FOLDER_OUT_OF_SYNC",
-				Message:   fmt.Sprintf("Folder %s has pending sync items", folder.Label),
-				SubjectID: folder.ID,
-			})
-		}
-	}
-
-	return alerts
 }
 
 func parseSyncthingTime(value string) *time.Time {
