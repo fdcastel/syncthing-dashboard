@@ -121,7 +121,7 @@ func buildDevice(now time.Time, tick int, startAt time.Time, pollInterval time.D
 	var totalBytes int64
 	for _, folder := range folders {
 		totalFiles += folder.LocalFiles
-		totalDirs += maxInt64(1, folder.LocalFiles/2)
+		totalDirs += max(1, folder.LocalFiles/2)
 		totalBytes += folder.LocalBytes
 	}
 
@@ -198,15 +198,15 @@ func buildFolders(now time.Time, tick int) []model.FolderStatus {
 			if needBytes < 64*mib {
 				needBytes = 64 * mib
 			}
-			localBytes = maxInt64(0, seed.GlobalBytes-needBytes)
-			needItems = maxInt64(1, int64(float64(seed.GlobalFiles)*(100-progress)/100))
-			localFiles = maxInt64(0, seed.GlobalFiles-needItems/2)
+			localBytes = max(0, seed.GlobalBytes-needBytes)
+			needItems = max(1, int64(float64(seed.GlobalFiles)*(100-progress)/100))
+			localFiles = max(0, seed.GlobalFiles-needItems/2)
 			if tick%11 == 0 && idx%2 == 0 {
 				state = "scan-waiting"
 			}
 		case "local":
 			state = "idle"
-			localChanges = maxInt64(1, seed.LocalChanges+int64(tick%3))
+			localChanges = max(1, seed.LocalChanges+int64(tick%3))
 		case "paused":
 			state = "paused"
 		case "scanning":
@@ -215,8 +215,8 @@ func buildFolders(now time.Time, tick int) []model.FolderStatus {
 			state = "error"
 			completion = 72
 			needBytes = int64(float64(seed.GlobalBytes) * 0.28)
-			needItems = maxInt64(3, seed.GlobalFiles/4)
-			localBytes = maxInt64(0, seed.GlobalBytes-needBytes)
+			needItems = max(3, seed.GlobalFiles/4)
+			localBytes = max(0, seed.GlobalBytes-needBytes)
 		}
 
 		lastScan := now.Add(-time.Duration((idx*13+tick)%170) * time.Minute).UTC()
@@ -284,9 +284,3 @@ func buildRemotes(now time.Time, tick int) []model.RemoteDeviceStatus {
 	return remotes
 }
 
-func maxInt64(a, b int64) int64 {
-	if a > b {
-		return a
-	}
-	return b
-}
