@@ -365,18 +365,10 @@ func parseSyncthingTime(value string) *time.Time {
 		return nil
 	}
 
-	formats := []string{
-		time.RFC3339Nano,
-		time.RFC3339,
-		"2006-01-02T15:04:05.999999999Z0700",
+	parsed, err := time.Parse(time.RFC3339Nano, value)
+	if err != nil {
+		return nil
 	}
-	for _, format := range formats {
-		parsed, err := time.Parse(format, value)
-		if err == nil {
-			utc := parsed.UTC()
-			return &utc
-		}
-	}
-
-	return nil
+	utc := parsed.UTC()
+	return &utc
 }
