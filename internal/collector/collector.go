@@ -260,13 +260,11 @@ func (c *Collector) collect(ctx context.Context, now time.Time) (model.Dashboard
 		}
 
 		remotes = append(remotes, model.RemoteDeviceStatus{
-			ID:            deviceCfg.DeviceID,
-			Name:          name,
-			Connected:     conn.Connected,
-			Address:       conn.Address,
-			LastSeenAt:    parseSyncthingTime(deviceStat.LastSeen),
-			InBytesTotal:  conn.InBytesTotal,
-			OutBytesTotal: conn.OutBytesTotal,
+			ID:         deviceCfg.DeviceID,
+			Name:       name,
+			Connected:  conn.Connected,
+			Address:    conn.Address,
+			LastSeenAt: parseSyncthingTime(deviceStat.LastSeen),
 		})
 	}
 	sort.Slice(remotes, func(i, j int) bool {

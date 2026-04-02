@@ -4,6 +4,8 @@ const pageTitle = document.getElementById("page-title");
 const pageSubtitle = document.getElementById("page-subtitle");
 const generatedAt = document.getElementById("generated-at");
 const globalStatus = document.getElementById("global-status");
+const alertsSection = document.getElementById("alerts-section");
+const alertsList = document.getElementById("alerts-list");
 const foldersCount = document.getElementById("folders-count");
 const foldersSummary = document.getElementById("folders-summary");
 const foldersList = document.getElementById("folders-list");
@@ -148,6 +150,21 @@ function folderStatus(folder) {
   return { label: "Up to Date", cls: "folder-state-up", phase: "idle", rightText: "Up to Date", progressWidth: 0 };
 }
 
+function renderAlerts(data) {
+  const alerts = Array.isArray(data.alerts) ? data.alerts : [];
+  if (alerts.length === 0) {
+    alertsSection.hidden = true;
+    alertsList.innerHTML = "";
+    return;
+  }
+
+  alertsSection.hidden = false;
+  alertsList.innerHTML = alerts.map((alert) => {
+    const cls = alert.severity === "critical" ? "alert-critical" : "alert-warn";
+    return `<div class="alert-item ${cls}">${escapeHTML(alert.message)}</div>`;
+  }).join("");
+}
+
 function renderDevice(data) {
   const globalClass = statusClassForGlobal(data);
   globalStatus.className = `status-pill ${globalClass}`;
@@ -289,6 +306,7 @@ function render(data) {
     refreshMs = serverPoll;
   }
   generatedAt.textContent = formatDate(data.generated_at);
+  renderAlerts(data);
   renderDevice(data);
   renderFolders(data);
   renderRemotes(data);

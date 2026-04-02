@@ -267,17 +267,13 @@ func buildRemotes(now time.Time, tick int) []model.RemoteDeviceStatus {
 		}
 
 		lastSeen := now.Add(-time.Duration((idx+1)*(tick%5+1)) * time.Minute).UTC()
-		inBytes := int64((120+idx*14)*gib) + int64(tick*idx*41*mib)
-		outBytes := int64((3+idx)*gib) + int64(tick*idx*11*mib)
 
 		remotes = append(remotes, model.RemoteDeviceStatus{
-			ID:            seed.ID,
-			Name:          seed.Name,
-			Connected:     connected,
-			Address:       seed.Address,
-			LastSeenAt:    &lastSeen,
-			InBytesTotal:  inBytes,
-			OutBytesTotal: outBytes,
+			ID:         seed.ID,
+			Name:       seed.Name,
+			Connected:  connected,
+			Address:    seed.Address,
+			LastSeenAt: &lastSeen,
 		})
 	}
 

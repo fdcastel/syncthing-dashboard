@@ -47,13 +47,11 @@ type FolderStatus struct {
 }
 
 type RemoteDeviceStatus struct {
-	ID            string     `json:"id"`
-	Name          string     `json:"name"`
-	Connected     bool       `json:"connected"`
-	Address       string     `json:"address"`
-	LastSeenAt    *time.Time `json:"last_seen_at"`
-	InBytesTotal  int64      `json:"in_bytes_total"`
-	OutBytesTotal int64      `json:"out_bytes_total"`
+	ID         string     `json:"id"`
+	Name       string     `json:"name"`
+	Connected  bool       `json:"connected"`
+	Address    string     `json:"address"`
+	LastSeenAt *time.Time `json:"last_seen_at"`
 }
 
 type Alert struct {
