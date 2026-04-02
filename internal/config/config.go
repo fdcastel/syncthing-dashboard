@@ -27,20 +27,54 @@ type Config struct {
 // Load reads environment variables and validates required settings.
 func Load() (Config, error) {
 	baseURL := strings.TrimSpace(os.Getenv("SYNCTHING_BASE_URL"))
-	cfg := Config{
-		DemoMode:             baseURL == "",
-		PollInterval:         durationFromEnv("SYNCTHING_DASHBOARD_POLL_INTERVAL", 5*time.Second),
-		HTTPListenAddr:       stringFromEnv("SYNCTHING_DASHBOARD_LISTEN_ADDRESS", ":8080"),
-		HTTPReadTimeout:      durationFromEnv("SYNCTHING_DASHBOARD_READ_TIMEOUT", 10*time.Second),
-		HTTPWriteTimeout:     durationFromEnv("SYNCTHING_DASHBOARD_WRITE_TIMEOUT", 10*time.Second),
-		STTimeout:            durationFromEnv("SYNCTHING_TIMEOUT", 8*time.Second),
-		STInsecureSkipVerify: boolFromEnv("SYNCTHING_INSECURE_SKIP_VERIFY", false),
-		PageTitle:            stringFromEnv("SYNCTHING_DASHBOARD_TITLE", "Syncthing"),
-		PageSubtitle:         stringFromEnv("SYNCTHING_DASHBOARD_SUBTITLE", "Read-Only Dashboard"),
+
+	pollInterval, err := durationFromEnv("SYNCTHING_DASHBOARD_POLL_INTERVAL", 5*time.Second)
+	if err != nil {
+		return Config{}, err
+	}
+	if pollInterval <= 0 {
+		return Config{}, fmt.Errorf("SYNCTHING_DASHBOARD_POLL_INTERVAL must be > 0")
 	}
 
-	if cfg.PollInterval <= 0 {
-		return Config{}, fmt.Errorf("SYNCTHING_DASHBOARD_POLL_INTERVAL must be > 0")
+	httpReadTimeout, err := durationFromEnv("SYNCTHING_DASHBOARD_READ_TIMEOUT", 10*time.Second)
+	if err != nil {
+		return Config{}, err
+	}
+	if httpReadTimeout <= 0 {
+		return Config{}, fmt.Errorf("SYNCTHING_DASHBOARD_READ_TIMEOUT must be > 0")
+	}
+
+	httpWriteTimeout, err := durationFromEnv("SYNCTHING_DASHBOARD_WRITE_TIMEOUT", 10*time.Second)
+	if err != nil {
+		return Config{}, err
+	}
+	if httpWriteTimeout <= 0 {
+		return Config{}, fmt.Errorf("SYNCTHING_DASHBOARD_WRITE_TIMEOUT must be > 0")
+	}
+
+	stTimeout, err := durationFromEnv("SYNCTHING_TIMEOUT", 8*time.Second)
+	if err != nil {
+		return Config{}, err
+	}
+	if stTimeout <= 0 {
+		return Config{}, fmt.Errorf("SYNCTHING_TIMEOUT must be > 0")
+	}
+
+	stInsecureSkipVerify, err := boolFromEnv("SYNCTHING_INSECURE_SKIP_VERIFY", false)
+	if err != nil {
+		return Config{}, err
+	}
+
+	cfg := Config{
+		DemoMode:             baseURL == "",
+		PollInterval:         pollInterval,
+		HTTPListenAddr:       stringFromEnv("SYNCTHING_DASHBOARD_LISTEN_ADDRESS", ":8080"),
+		HTTPReadTimeout:      httpReadTimeout,
+		HTTPWriteTimeout:     httpWriteTimeout,
+		STTimeout:            stTimeout,
+		STInsecureSkipVerify: stInsecureSkipVerify,
+		PageTitle:            stringFromEnv("SYNCTHING_DASHBOARD_TITLE", "Syncthing"),
+		PageSubtitle:         stringFromEnv("SYNCTHING_DASHBOARD_SUBTITLE", "Read-Only Dashboard"),
 	}
 
 	if cfg.DemoMode {
@@ -86,37 +120,37 @@ func loadAPIKey() (string, error) {
 	return apiKey, nil
 }
 
-func durationFromEnv(name string, fallback time.Duration) time.Duration {
+func durationFromEnv(name string, fallback time.Duration) (time.Duration, error) {
 	value := strings.TrimSpace(os.Getenv(name))
 	if value == "" {
-		return fallback
+		return fallback, nil
 	}
 
 	parsed, err := time.ParseDuration(value)
 	if err == nil {
-		return parsed
+		return parsed, nil
 	}
 
-	// Accept plain integers as seconds for convenience (e.g. \"2\" => 2s).
+	// Accept plain integers as seconds for convenience (e.g. "2" => 2s).
 	if seconds, parseErr := strconv.Atoi(value); parseErr == nil && seconds >= 0 {
-		return time.Duration(seconds) * time.Second
+		return time.Duration(seconds) * time.Second, nil
 	}
 
-	return fallback
+	return 0, fmt.Errorf("%s: invalid duration %q", name, value)
 }
 
-func boolFromEnv(name string, fallback bool) bool {
+func boolFromEnv(name string, fallback bool) (bool, error) {
 	value := strings.TrimSpace(os.Getenv(name))
 	if value == "" {
-		return fallback
+		return fallback, nil
 	}
 
 	parsed, err := strconv.ParseBool(value)
 	if err != nil {
-		return fallback
+		return false, fmt.Errorf("%s: invalid boolean %q", name, value)
 	}
 
-	return parsed
+	return parsed, nil
 }
 
 func stringFromEnv(name, fallback string) string {

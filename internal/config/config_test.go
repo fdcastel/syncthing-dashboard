@@ -70,3 +70,53 @@ func TestLoadAcceptsNumericPollIntervalInSeconds(t *testing.T) {
 		t.Fatalf("expected poll interval of 2s, got %s", cfg.PollInterval)
 	}
 }
+
+func TestLoadRejectsInvalidDuration(t *testing.T) {
+	t.Setenv("SYNCTHING_BASE_URL", "")
+	t.Setenv("SYNCTHING_DASHBOARD_POLL_INTERVAL", "not-a-duration")
+
+	_, err := Load()
+	if err == nil {
+		t.Fatalf("expected error for invalid duration")
+	}
+}
+
+func TestLoadRejectsInvalidBool(t *testing.T) {
+	t.Setenv("SYNCTHING_BASE_URL", "")
+	t.Setenv("SYNCTHING_INSECURE_SKIP_VERIFY", "yes-please")
+
+	_, err := Load()
+	if err == nil {
+		t.Fatalf("expected error for invalid boolean")
+	}
+}
+
+func TestLoadRejectsZeroSTTimeout(t *testing.T) {
+	t.Setenv("SYNCTHING_BASE_URL", "")
+	t.Setenv("SYNCTHING_TIMEOUT", "0")
+
+	_, err := Load()
+	if err == nil {
+		t.Fatalf("expected error for zero SYNCTHING_TIMEOUT")
+	}
+}
+
+func TestLoadRejectsZeroReadTimeout(t *testing.T) {
+	t.Setenv("SYNCTHING_BASE_URL", "")
+	t.Setenv("SYNCTHING_DASHBOARD_READ_TIMEOUT", "0s")
+
+	_, err := Load()
+	if err == nil {
+		t.Fatalf("expected error for zero read timeout")
+	}
+}
+
+func TestLoadRejectsZeroWriteTimeout(t *testing.T) {
+	t.Setenv("SYNCTHING_BASE_URL", "")
+	t.Setenv("SYNCTHING_DASHBOARD_WRITE_TIMEOUT", "0s")
+
+	_, err := Load()
+	if err == nil {
+		t.Fatalf("expected error for zero write timeout")
+	}
+}
