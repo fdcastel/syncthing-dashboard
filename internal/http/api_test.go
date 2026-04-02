@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -92,4 +93,35 @@ func TestReadyz(t *testing.T) {
 	if r2.Code != http.StatusServiceUnavailable {
 		t.Fatalf("expected not ready status 503, got %d", r2.Code)
 	}
+}
+
+func TestRootServesIndexHTML(t *testing.T) {
+	api := New(fakeReader{ok: true, ready: true}, "Syncthing", "Read-Only Dashboard", 5*time.Second)
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	rr := httptest.NewRecorder()
+	api.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected 200 for /, got %d", rr.Code)
+	}
+	if !strings.Contains(rr.Header().Get("Content-Type"), "text/html") {
+		t.Fatalf("expected HTML content-type for /, got %q", rr.Header().Get("Content-Type"))
+	}
+	if !strings.Contains(rr.Body.String(), "<!doctype html>") {
+		t.Fatalf("expected HTML body for /, got: %.100s", rr.Body.String())
+	}
+}
+
+func contains(s, substr string) bool {
+	return len(s) >= len(substr) && (s == substr || len(s) > 0 && containsStr(s, substr))
+}
+
+func containsStr(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
 }

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"syncthing-dashboard/internal/model"
+	webstatic "syncthing-dashboard/web"
 )
 
 type snapshotReader interface {
@@ -34,7 +35,7 @@ func New(reader snapshotReader, pageTitle, pageSubtitle string, pollInterval tim
 	api.mux.HandleFunc("/api/v1/dashboard", api.handleDashboard)
 	api.mux.HandleFunc("/healthz", api.handleHealthz)
 	api.mux.HandleFunc("/readyz", api.handleReadyz)
-	api.mux.Handle("/", http.FileServer(http.Dir("web")))
+	api.mux.Handle("/", http.FileServer(http.FS(webstatic.Files)))
 
 	return api
 }
