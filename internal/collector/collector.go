@@ -151,15 +151,6 @@ func (c *Collector) collect(ctx context.Context, now time.Time) (model.Dashboard
 		return model.DashboardSnapshot{}, err
 	}
 
-	dbStatuses := make(map[string]syncthing.DBStatusResponse, len(cfg.Folders))
-	for _, folder := range cfg.Folders {
-		dbStatus, dbErr := c.client.GetDBStatus(ctx, folder.ID)
-		if dbErr != nil {
-			return model.DashboardSnapshot{}, fmt.Errorf("get db status for folder %s: %w", folder.ID, dbErr)
-		}
-		dbStatuses[folder.ID] = dbStatus
-	}
-
 	localDeviceID := status.MyID
 	localDeviceName := localDeviceID
 	for _, device := range cfg.Devices {
@@ -183,8 +174,12 @@ func (c *Collector) collect(ctx context.Context, now time.Time) (model.Dashboard
 	}
 
 	folders := make([]model.FolderStatus, 0, len(cfg.Folders))
+	var localFilesTotal, localDirsTotal, localBytesTotal int64
 	for _, folder := range cfg.Folders {
-		dbStatus := dbStatuses[folder.ID]
+		dbStatus, dbErr := c.client.GetDBStatus(ctx, folder.ID)
+		if dbErr != nil {
+			return model.DashboardSnapshot{}, fmt.Errorf("get db status for folder %s: %w", folder.ID, dbErr)
+		}
 		completion, completionErr := c.client.GetDBCompletion(ctx, folder.ID)
 		if completionErr != nil {
 			return model.DashboardSnapshot{}, fmt.Errorf("get db completion for folder %s: %w", folder.ID, completionErr)
@@ -242,6 +237,10 @@ func (c *Collector) collect(ctx context.Context, now time.Time) (model.Dashboard
 			CompletionPct:     completionPct,
 			LastScanAt:        lastScan,
 		})
+
+		localFilesTotal += dbStatus.LocalFiles
+		localDirsTotal += dbStatus.LocalDirectories
+		localBytesTotal += dbStatus.LocalBytes
 	}
 	sort.Slice(folders, func(i, j int) bool {
 		return folders[i].Label < folders[j].Label
@@ -273,15 +272,6 @@ func (c *Collector) collect(ctx context.Context, now time.Time) (model.Dashboard
 	sort.Slice(remotes, func(i, j int) bool {
 		return remotes[i].Name < remotes[j].Name
 	})
-
-	var localFilesTotal int64
-	var localDirsTotal int64
-	var localBytesTotal int64
-	for _, dbStatus := range dbStatuses {
-		localFilesTotal += dbStatus.LocalFiles
-		localDirsTotal += dbStatus.LocalDirectories
-		localBytesTotal += dbStatus.LocalBytes
-	}
 
 	listenersOK, listenersTotal := serviceHealthCount(status.ConnectionServiceStatus)
 	discoveryOK, discoveryTotal := discoveryHealthCount(status)
