@@ -2,6 +2,7 @@ name: CI
 
 on:
   push:
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -23,8 +24,14 @@ jobs:
       - name: Build
         run: go build ./cmd/dashboard
 
+      - name: Vet
+        run: go vet ./...
+
       - name: Test
         run: go test ./...
 
       - name: Test (race detector)
         run: go test -race ./...
+
+      - name: Docker Build (smoke test)
+        run: docker build .
