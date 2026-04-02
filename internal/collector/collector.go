@@ -35,7 +35,7 @@ func New(client *syncthing.Client, pollInterval time.Duration) *Collector {
 }
 
 func (c *Collector) Start(ctx context.Context) {
-	c.refresh(ctx)
+	c.refresh(ctx, time.Now().UTC())
 
 	ticker := time.NewTicker(c.pollInterval)
 	go func() {
@@ -45,7 +45,7 @@ func (c *Collector) Start(ctx context.Context) {
 			case <-ctx.Done():
 				return
 			case <-ticker.C:
-				c.refresh(ctx)
+				c.refresh(ctx, time.Now().UTC())
 			}
 		}
 	}()
@@ -76,8 +76,7 @@ func (c *Collector) Snapshot() (model.DashboardSnapshot, bool) {
 	return out, true
 }
 
-func (c *Collector) refresh(ctx context.Context) {
-	now := time.Now().UTC()
+func (c *Collector) refresh(ctx context.Context, now time.Time) {
 	snapshot, err := c.collect(ctx, now)
 	if err == nil {
 		snapshot.GeneratedAt = now

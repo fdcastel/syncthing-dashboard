@@ -45,7 +45,7 @@ func TestCollectorMapsSnapshotAndAlerts(t *testing.T) {
 
 	client := syncthing.NewClient(ts.URL, "key", 2*time.Second, false)
 	c := New(client, 5*time.Second)
-	c.refresh(context.Background())
+	c.refresh(context.Background(), time.Now().UTC())
 
 	snapshot, ok := c.Snapshot()
 	if !ok {
@@ -108,7 +108,7 @@ func TestCollectorSourceUnreachableAddsCriticalAlert(t *testing.T) {
 	client := syncthing.NewClient("http://127.0.0.1:1", "key", 100*time.Millisecond, false)
 	c := New(client, 5*time.Second)
 
-	c.refresh(context.Background())
+	c.refresh(context.Background(), time.Now().UTC())
 	snapshot, ok := c.Snapshot()
 	if !ok {
 		t.Fatalf("expected snapshot")
@@ -175,9 +175,9 @@ func TestCollectorComputesRatesFromConnectionTotals(t *testing.T) {
 
 	client := syncthing.NewClient(ts.URL, "key", 2*time.Second, false)
 	c := New(client, 5*time.Second)
-	c.refresh(context.Background())
-	time.Sleep(120 * time.Millisecond)
-	c.refresh(context.Background())
+	now := time.Now().UTC()
+	c.refresh(context.Background(), now)
+	c.refresh(context.Background(), now.Add(time.Second))
 
 	snapshot, ok := c.Snapshot()
 	if !ok {
