@@ -1,6 +1,7 @@
 package config
 
 import (
+	"os"
 	"testing"
 	"time"
 )
@@ -118,5 +119,47 @@ func TestLoadRejectsZeroWriteTimeout(t *testing.T) {
 	_, err := Load()
 	if err == nil {
 		t.Fatalf("expected error for zero write timeout")
+	}
+}
+
+func TestLoadAPIKeyFromFile(t *testing.T) {
+	tmp, err := os.CreateTemp("", "apikey-*")
+	if err != nil {
+		t.Fatalf("failed to create temp file: %v", err)
+	}
+	defer os.Remove(tmp.Name())
+	if _, err := tmp.WriteString("secret-from-file"); err != nil {
+		t.Fatalf("failed to write temp file: %v", err)
+	}
+	tmp.Close()
+
+	t.Setenv("SYNCTHING_BASE_URL", "http://localhost:8384")
+	t.Setenv("SYNCTHING_API_KEY", "")
+	t.Setenv("SYNCTHING_API_KEY_FILE", tmp.Name())
+
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("Load returned error: %v", err)
+	}
+	if cfg.STAPIKey != "secret-from-file" {
+		t.Fatalf("unexpected API key: %q", cfg.STAPIKey)
+	}
+}
+
+func TestLoadAPIKeyFromEmptyFile(t *testing.T) {
+	tmp, err := os.CreateTemp("", "apikey-empty-*")
+	if err != nil {
+		t.Fatalf("failed to create temp file: %v", err)
+	}
+	defer os.Remove(tmp.Name())
+	tmp.Close()
+
+	t.Setenv("SYNCTHING_BASE_URL", "http://localhost:8384")
+	t.Setenv("SYNCTHING_API_KEY", "")
+	t.Setenv("SYNCTHING_API_KEY_FILE", tmp.Name())
+
+	_, err = Load()
+	if err == nil {
+		t.Fatalf("expected error for empty API key file")
 	}
 }
