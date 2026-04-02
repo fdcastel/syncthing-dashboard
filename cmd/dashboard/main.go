@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"errors"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -26,7 +26,8 @@ type dashboardService interface {
 
 func main() {
 	if err := run(); err != nil {
-		log.Fatalf("dashboard failed: %v", err)
+		slog.Error("dashboard failed", "error", err)
+		os.Exit(1)
 	}
 }
 
@@ -38,7 +39,7 @@ func run() error {
 
 	var dashboardSvc dashboardService
 	if cfg.DemoMode {
-		log.Printf("SYNCTHING_BASE_URL is not set; running in demonstration mode")
+		slog.Info("SYNCTHING_BASE_URL is not set; running in demonstration mode")
 		dashboardSvc = demo.NewCollector(cfg.PollInterval)
 	} else {
 		client := syncthing.NewClient(cfg.STBaseURL, cfg.STAPIKey, cfg.STTimeout, cfg.STInsecureSkipVerify)
@@ -64,11 +65,11 @@ func run() error {
 		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer shutdownCancel()
 		if err := server.Shutdown(shutdownCtx); err != nil {
-			log.Printf("shutdown error: %v", err)
+			slog.Error("shutdown error", "error", err)
 		}
 	}()
 
-	log.Printf("read-only Syncthing dashboard listening on %s", cfg.HTTPListenAddr)
+	slog.Info("read-only Syncthing dashboard listening", "addr", cfg.HTTPListenAddr)
 	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return err
 	}
